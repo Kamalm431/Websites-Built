@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Km ⇄ Mi — Distance Converter</title>
+<style>
+  :root{
+    --ink:#1c2b24;
+    --paper:#eef0e6;
+    --line:#c7cabb;
+    --route:#3d6b52;
+    --route-soft:#e4ece3;
+    --accent:#b5542c;
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:var(--paper);
+    color:var(--ink);
+    font-family: 'Courier New', ui-monospace, monospace;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+
+  .card{
+    width:100%;
+    max-width:460px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:36px 32px 30px;
+    box-shadow: 0 1px 0 var(--line);
+  }
+
+  .eyebrow{
+    font-size:11px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--route);
+    margin:0 0 6px;
+  }
+
+  h1{
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight:400;
+    font-size:28px;
+    margin:0 0 24px;
+    letter-spacing:-.01em;
+  }
+
+  .dial{
+    display:flex;
+    border:1px solid var(--ink);
+    border-radius:2px;
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+
+  .dial button{
+    flex:1;
+    padding:12px 8px;
+    background:#fff;
+    border:none;
+    font-family:inherit;
+    font-size:13px;
+    letter-spacing:.03em;
+    color:var(--ink);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+
+  .dial button + button{
+    border-left:1px solid var(--ink);
+  }
+
+  .dial button.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+
+  label{
+    display:block;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:#6b7568;
+    margin-bottom:8px;
+  }
+
+  .input-row{
+    position:relative;
+    margin-bottom:26px;
+  }
+
+  input[type="number"]{
+    width:100%;
+    font-family: Georgia, serif;
+    font-size:32px;
+    padding:6px 60px 10px 0;
+    border:none;
+    border-bottom:2px solid var(--ink);
+    background:transparent;
+    color:var(--ink);
+    outline:none;
+  }
+
+  input[type="number"]:focus{
+    border-bottom-color:var(--accent);
+  }
+
+  .unit-tag{
+    position:absolute;
+    right:0;
+    bottom:14px;
+    font-size:13px;
+    color:#6b7568;
+    letter-spacing:.05em;
+  }
+
+  .readout{
+    background:var(--route-soft);
+    border:1px solid var(--line);
+    border-radius:2px;
+    padding:18px 20px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+  }
+
+  .readout .value{
+    font-family: Georgia, serif;
+    font-size:30px;
+    color:var(--route);
+    word-break:break-all;
+  }
+
+  .readout .unit{
+    font-size:13px;
+    letter-spacing:.05em;
+    color:var(--route);
+    white-space:nowrap;
+  }
+
+  .trail{
+    margin-top:18px;
+    font-size:11px;
+    color:#8b9186;
+    letter-spacing:.02em;
+    text-align:right;
+  }
+
+  @media (prefers-reduced-motion: no-preference){
+    input[type="number"], .dial button{ transition: all .15s ease; }
+  }
+</style>
+</head>
+<body>
+
+  <main class="card">
+    <p class="eyebrow">Distance Converter</p>
+    <h1>Km ⇄ Miles</h1>
+
+    <div class="dial" role="group" aria-label="Conversion direction">
+      <button id="btn-km-mi" class="active" onclick="setDirection('km-mi')">KM → MI</button>
+      <button id="btn-mi-km" onclick="setDirection('mi-km')">MI → KM</button>
+    </div>
+
+    <div class="input-row">
+      <label id="input-label" for="value">Kilometers</label>
+      <input type="number" id="value" placeholder="0" inputmode="decimal" oninput="convert()">
+      <span class="unit-tag" id="input-unit">km</span>
+    </div>
+
+    <div class="readout">
+      <span class="value" id="result">0</span>
+      <span class="unit" id="output-unit">miles</span>
+    </div>
+
+    <p class="trail" id="factor">1 km = 0.621371 mi</p>
+  </main>
+
+<script>
+  const KM_TO_MI = 0.621371;
+  const MI_TO_KM = 1.609344;
+
+  let direction = 'km-mi';
+
+  function setDirection(dir){
+    direction = dir;
+    document.getElementById('btn-km-mi').classList.toggle('active', dir === 'km-mi');
+    document.getElementById('btn-mi-km').classList.toggle('active', dir === 'mi-km');
+
+    const inputLabel = document.getElementById('input-label');
+    const inputUnit = document.getElementById('input-unit');
+    const outputUnit = document.getElementById('output-unit');
+    const factor = document.getElementById('factor');
+
+    if(dir === 'km-mi'){
+      inputLabel.textContent = 'Kilometers';
+      inputUnit.textContent = 'km';
+      outputUnit.textContent = 'miles';
+      factor.textContent = '1 km = 0.621371 mi';
+    } else {
+      inputLabel.textContent = 'Miles';
+      inputUnit.textContent = 'mi';
+      outputUnit.textContent = 'kilometers';
+      factor.textContent = '1 mi = 1.609344 km';
+    }
+    convert();
+  }
+
+  function convert(){
+    const raw = document.getElementById('value').value;
+    const num = parseFloat(raw);
+    const result = document.getElementById('result');
+
+    if(raw === '' || isNaN(num)){
+      result.textContent = '0';
+      return;
+    }
+
+    const output = direction === 'km-mi' ? num * KM_TO_MI : num * MI_TO_KM;
+    result.textContent = Number(output.toFixed(6)).toString();
+  }
+</script>
+
+</body>
+</html>
